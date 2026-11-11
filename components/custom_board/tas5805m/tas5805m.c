@@ -304,7 +304,7 @@ esp_err_t tas5805m_init() {
   BaseType_t task_ret = xTaskCreate(
     tas5805m_fault_monitor_task,
     "tas5805m_faults",
-    2048,
+    4096,  /* 2048 overflowed when logging/decoding faults -> boot loop */
     NULL,
     5,
     &tas5805m_fault_monitor_task_handle

@@ -2623,6 +2623,21 @@ esp_err_t tas5805m_settings_apply_early(void) {
         if (tas5805m_set_dac_mode(dac_mode) != ESP_OK) {
             ESP_LOGW(TAG, "%s: Failed to apply saved DAC mode", __func__);
         }
+    } else {
+        // Nothing saved yet (first boot / erased NVS): apply the configured
+        // default and persist it, so the chip's power-up mode never decides.
+#ifdef CONFIG_DAC_TAS5805M_DEFAULT_PBTL
+        dac_mode = TAS5805M_DAC_MODE_PBTL;
+#else
+        dac_mode = TAS5805M_DAC_MODE_BTL;
+#endif
+        ESP_LOGI(TAG, "%s: No saved DAC mode, applying default=%d (%s)", __func__, (int)dac_mode,
+                 dac_mode == TAS5805M_DAC_MODE_BTL ? "BTL" : "PBTL");
+        if (tas5805m_set_dac_mode(dac_mode) == ESP_OK) {
+            tas5805m_settings_save_dac_mode(dac_mode);
+        } else {
+            ESP_LOGW(TAG, "%s: Failed to apply default DAC mode", __func__);
+        }
     }
 
     // Apply modulation mode (mode, sw_freq, bd_freq)
